@@ -191,12 +191,12 @@ class Att_FM_model(nn.Module):
 
             rep_fm, decode_out, t_rf_expand, t_rf, z0 = self.fm_pre(item_embeddings, tag_emb, mask_seq)
 
-            seq_Matrix = self.switch_Matrix(sequence, device=sequence.device)
+            # seq_Matrix = self.switch_Matrix(sequence, device=sequence.device)
 
-            loss_mse = self.balanced_mse_loss(seq_Matrix, decode_out, self.mask_ratio)
+            # loss_mse = self.balanced_mse_loss(seq_Matrix, decode_out, self.mask_ratio)
 
             ############X0_pred
-            scores = loss_mse
+            scores = 0. # loss_mse
 
             # ######V_pred
             # scores = tag_emb

@@ -1,14 +1,11 @@
-import torch.nn as nn
-import torch as th
-import numpy as np
 import math
-import torch
-import torch.nn.functional as F
-from timm.models.vision_transformer import PatchEmbed, Attention, Mlp
 
+import torch
+import torch as th
+import torch.nn as nn
+import torch.nn.functional as F
 from scipy import integrate
-from scipy.stats import norm
-from torch.nn.init import xavier_normal_, constant_, xavier_uniform_
+from torch.nn.init import xavier_normal_, constant_
 
 
 class SiLU(nn.Module):
@@ -45,6 +42,30 @@ class SublayerConnection(nn.Module):
     def forward(self, x, sublayer):
         "Apply residual connection to any sublayer with the same size."
         return x + self.dropout(sublayer(self.norm(x)))
+
+
+class MultiInterestLearning(nn.Module):
+    """
+    MultiInterests Construction
+    Generate multi-interests from a single sequence
+    through apply different weights to the items in the seqs.
+    """
+    def __init__(self, hidden_size, num_interests:int, dropout):
+        super(MultiInterestLearning).__init__()
+        self.dropout = nn.Dropout(dropout)
+        self.norm = LayerNorm(hidden_size)
+        self.num_interests = num_interests
+        self.linear_1 = nn.Linear(hidden_size, hidden_size * num_interests)
+        self.linear_2 = nn.Parameter(torch.Tensor(hidden_size, self.num_interests))
+
+    def forward(self, x, mask=None):
+        weights = (torch.sigmoid(self.linear_1(x)).view(x.size(0), x.size(1), x.size(2), self.num_interests) *
+                   self.linear_2.unsqueeze(0).unsqueeze(0)) # [B L D num_interests] * [B L D num_interests]
+        weights = weights.sum(-2)  # [B L num_interests]
+        weights = weights * mask.expand_as(weights)
+        multi_x = weights.transpose(0,2, 1) @ x # [B num, L] @ [B L D] = [B, num, D]
+        # TODO
+        return None
 
 
 class PositionwiseFeedForward(nn.Module):
@@ -133,13 +154,13 @@ class Transformer_rep(nn.Module):
         i = 0
         for transformer in self.transformer_blocks:
             i += 1
-            hidden = transformer.forward(hidden, c, mask)
+            hidden = transformer(hidden, c, mask)
             if i == (self.n_blocks - self.last):
                 encode = hidden
         return hidden, encode
 
 class FM_xstart(nn.Module):
-    def __init__(self, hidden_size, args):
+    def __init__(self, hidden_size:int, args):
         super(FM_xstart, self).__init__()
         self.hidden_size = hidden_size
         self.linear_item = nn.Linear(self.hidden_size, self.hidden_size)
@@ -222,6 +243,11 @@ class FM_xstart(nn.Module):
         condition_cross = rep_item
 
         rep_fm, encode = self.att(rep_item_New, condition_cross, mask_seq)
+
+        # TODO: 替换self-attn
+
+
+
 
         rep_fm = self.norm_fm_rep(self.dropout(rep_fm))
 
@@ -315,7 +341,7 @@ class FMRec(nn.Module):
                 # ## V_pred
                 # V = pred
                 
-                ## Rectified Flow
+                ## Rectified Flow z0 = noise
                 V = pred - z0       
 
                 # #### Cosine
@@ -371,7 +397,7 @@ class FMRec(nn.Module):
 
         
     def q_sample_rf(self, x_start, t, z0, mask=None):
-
+        # z0 = noise
         assert z0.shape == x_start.shape
 
         # Rectified Flow

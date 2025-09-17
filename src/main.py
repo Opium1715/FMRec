@@ -1,23 +1,19 @@
-import os
-import datetime
-import random
 import argparse
+import logging
+import os
+import pickle
+import random
+import time
+
+import numpy as np
 import torch
 import torch.backends.cudnn as cudnn
-import numpy as np
-import logging
-import time
-import pickle
-from utils import Data_Train, Data_Val, Data_Test, Data_CHLS
+
 from model import create_model_FM, Att_FM_model
-from trainer import model_train, LSHT_inference
-from collections import Counter
+from trainer import model_train
+from utils import Data_Train, Data_Val, Data_Test
 
-import itertools
-from copy import deepcopy
-import multiprocessing
-
-os.environ["CUDA_VISIBLE_DEVICES"] = "7"
+os.environ["CUDA_VISIBLE_DEVICES"] = "2"
 
 
 parser = argparse.ArgumentParser()
@@ -42,7 +38,7 @@ parser.add_argument('--lr', type=float, default=0.001, help='Learning rate')
 parser.add_argument('--weight_decay', type=float, default=0, help='L2 regularization')
 parser.add_argument('--momentum', type=float, default=None, help='SGD momentum')
 parser.add_argument('--lambda_uncertainty', type=float, default=0.001, help='uncertainty weight')
-parser.add_argument('--eval_interval', type=int, default=20, help='the number of epoch to eval')
+parser.add_argument('--eval_interval', type=int, default=5, help='the number of epoch to eval')
 parser.add_argument('--patience', type=int, default=5, help='the number of epoch to wait before early stop')
 parser.add_argument('--eps', type=float, default=0.001, help='start step')
 parser.add_argument('--sample_N', type=int, default=30, help='Euler calculate steps')

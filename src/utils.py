@@ -42,7 +42,7 @@ class Data_Train():
 
     def get_pytorch_dataloaders(self):
         dataset = TrainDataset(self.id_seq, self.max_len)
-        return data_utils.DataLoader(dataset, batch_size=self.batch_size, shuffle=True, pin_memory=True)
+        return data_utils.DataLoader(dataset, batch_size=self.batch_size, num_workers=4, shuffle=True, pin_memory=True)
 
 
 class ValDataset(data_utils.Dataset):
@@ -75,7 +75,7 @@ class Data_Val():
 
     def get_pytorch_dataloaders(self):
         dataset = ValDataset(self.u2seq, self.u2answer, self.max_len)
-        dataloader = data_utils.DataLoader(dataset, batch_size=self.batch_size, shuffle=False, pin_memory=True)
+        dataloader = data_utils.DataLoader(dataset, batch_size=self.batch_size, num_workers=2, shuffle=False, pin_memory=True)
         return dataloader
 
 

@@ -1,14 +1,11 @@
-import torch.nn as nn
-import torch.optim as optim
-import datetime
-import torch
-import numpy as np
 import copy
+import datetime
 import time
-import pickle
-
-import matplotlib.pyplot as plt
 from contextlib import contextmanager
+
+import numpy as np
+import torch
+import torch.optim as optim
 
 
 def optimizers(model, args):
